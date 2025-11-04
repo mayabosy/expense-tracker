@@ -1,0 +1,76 @@
+﻿@page
+@model ExpenseTracker.Web.Pages.IndexModel
+@{
+    ViewData["Title"] = "Expense Tracker";
+}
+
+<h1>Expense Tracker</h1>
+
+<form method="post">
+    <div class="mb-3">
+        <label asp-for="Date" class="form-label">Date</label>
+        <input asp-for="Date" class="form-control" type="date" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Category" class="form-label">Category</label>
+        <input asp-for="Category" class="form-control" />
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Description</label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Amount" class="form-label">Amount</label>
+        <input asp-for="Amount" class="form-control" />
+        <span asp-validation-for="Amount" class="text-danger"></span>
+    </div>
+
+    <button type="submit" asp-page-handler="Add" class="btn btn-primary">
+        Add Expense
+    </button>
+</form>
+
+<hr />
+
+<h2>Expenses</h2>
+
+@if (Model.Expenses.Count == 0)
+{
+    <p>No expenses yet.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var e in Model.Expenses)
+        {
+            <tr>
+                <td>@e.Date.ToString("yyyy-MM-dd")</td>
+                <td>@e.Category</td>
+                <td>@e.Description</td>
+                <td class="text-end">@e.Amount.ToString("F2")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <h3 class="text-end">Total: @Model.Total.ToString("F2")</h3>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

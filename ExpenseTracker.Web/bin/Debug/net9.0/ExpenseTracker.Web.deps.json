@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "ExpenseTracker.Web/1.0.0": {
+        "runtime": {
+          "ExpenseTracker.Web.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ExpenseTracker.Web/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
