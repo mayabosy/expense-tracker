@@ -4,7 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddSingleton<ExpenseService>();   // 👈 add this line
+builder.Services.AddSingleton<ExpenseService>();
+builder.Services.AddSingleton<BudgetService>(); // 👈 NEW
 
 var app = builder.Build();
 

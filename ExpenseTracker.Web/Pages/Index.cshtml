@@ -2,73 +2,161 @@
 @model ExpenseTracker.Web.Pages.IndexModel
 @{
     ViewData["Title"] = "Expense Tracker";
+    var culture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
+    var today = DateTime.Today;
 }
 
 <h1>Expense Tracker</h1>
 
-<form method="post">
-    <div class="mb-3">
-        <label asp-for="Date" class="form-label">Date</label>
-        <input asp-for="Date" class="form-control" type="date" />
-        <span asp-validation-for="Date" class="text-danger"></span>
+<div class="row">
+    <!-- EXPENSE FORM -->
+    <div class="col-md-6">
+        <h2>Add Expense</h2>
+        <form method="post" asp-page-handler="Add">
+            <div class="mb-3">
+                <label asp-for="Date" class="form-label">Date</label>
+                <input asp-for="Date" class="form-control" type="date" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Category" class="form-label">Category</label>
+                <select asp-for="Category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                    @foreach (var c in Model.CategoryOptions)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Description</label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Amount" class="form-label">Amount (£)</label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Add Expense
+            </button>
+        </form>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Category" class="form-label">Category</label>
-        <input asp-for="Category" class="form-control" />
-        <span asp-validation-for="Category" class="text-danger"></span>
-    </div>
+    <!-- BUDGET FORM -->
+    <div class="col-md-6">
+        <h2>Monthly Budget</h2>
+        <form method="post" asp-page-handler="SetBudget">
+            <div class="mb-3">
+                <label class="form-label">Month</label>
+                <input class="form-control" value='@today.ToString("yyyy MMM")' disabled />
+                <!-- These hidden fields pass the current month/year -->
+                <input type="hidden" name="year" value="@today.Year" />
+                <input type="hidden" name="month" value="@today.Month" />
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="Description" class="form-label">Description</label>
-        <input asp-for="Description" class="form-control" />
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
+            <div class="mb-3">
+                <label asp-for="BudgetAmount" class="form-label">Budget (£)</label>
+                <input asp-for="BudgetAmount" class="form-control" />
+                <span asp-validation-for="BudgetAmount" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="Amount" class="form-label">Amount</label>
-        <input asp-for="Amount" class="form-control" />
-        <span asp-validation-for="Amount" class="text-danger"></span>
+            <button type="submit" class="btn btn-secondary">
+                Set Budget for Current Month
+            </button>
+        </form>
     </div>
-
-    <button type="submit" asp-page-handler="Add" class="btn btn-primary">
-        Add Expense
-    </button>
-</form>
+</div>
 
 <hr />
 
-<h2>Expenses</h2>
+<h2>Spending by Month and Category</h2>
 
-@if (Model.Expenses.Count == 0)
+@if (!Model.MonthlyGroups.Any())
 {
     <p>No expenses yet.</p>
 }
 else
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th class="text-end">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var e in Model.Expenses)
-        {
-            <tr>
-                <td>@e.Date.ToString("yyyy-MM-dd")</td>
-                <td>@e.Category</td>
-                <td>@e.Description</td>
-                <td class="text-end">@e.Amount.ToString("F2")</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    @foreach (var month in Model.MonthlyGroups)
+    {
+        <div class="mb-4">
+            <h3>@month.MonthLabel</h3>
+            <p class="text-muted">
+                Spent: @string.Format(culture, "{0:C}", month.Total)
 
-    <h3 class="text-end">Total: @Model.Total.ToString("F2")</h3>
+                @if (month.HasBudget)
+                {
+                    var remaining = month.Remaining ?? 0;
+
+                    <span>
+                        | Budget: @string.Format(culture, "{0:C}", month.Budget ?? 0)
+                    </span>
+
+                    @if (month.IsOverBudget)
+                    {
+                        <span class="text-danger">
+                            | Over budget by @string.Format(culture, "{0:C}", -remaining)
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-success">
+                            | Remaining: @string.Format(culture, "{0:C}", remaining)
+                        </span>
+                    }
+                }
+                else
+                {
+                    <span> | No budget set.</span>
+                }
+            </p>
+
+            @foreach (var cat in month.Categories)
+            {
+                <div class="ms-3 mb-3">
+                    <h5>
+                        @cat.Category
+                        <small class="text-muted">
+                            (Total: @string.Format(culture, "{0:C}", cat.Total))
+                        </small>
+                    </h5>
+
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Date</th>
+                                <th>Description</th>
+                                <th class="text-end" style="width: 120px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var e in cat.Expenses)
+                        {
+                            <tr>
+                                <td>@e.Date.ToString("yyyy-MM-dd")</td>
+                                <td>@e.Description</td>
+                                <td class="text-end">
+                                    @string.Format(culture, "{0:C}", e.Amount)
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+
+    <h3 class="text-end">
+        Overall Total: @string.Format(culture, "{0:C}", Model.Total)
+    </h3>
 }
 
 @section Scripts {
